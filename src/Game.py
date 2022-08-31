@@ -35,7 +35,7 @@ class Game:
 
     # Reset all the variables and restart the game
     def restart(self):
-        self.snake = Snake.Snake(self.size)
+        self.snake.reset()
         self.foodPos = None
         self.food = None
         self.score = 0

@@ -33,13 +33,22 @@ class Snake:
     # Constructor
     def __init__(self, boardSize):
         self.boardSize = boardSize
-        middle = boardSize / 2
-        head = (middle, middle)
-        self.snake.append(head)  # Set the snake starts in the middle
+
         self.snakeMaxSize = boardSize * boardSize
 
+        self.reset()
+
+    def reset(self):
+        self.snake = []
+        self.headIdx = 0
+        self.tailIdx = 0
+        middle = self.boardSize / 2
+        head = (middle, middle)
+        self.snake.append(head)  # Set the snake starts in the middle
+        self.direction = Direction.LEFT
+
         # Instantiate a list with the size of snakeMaxSize
-        for i in range(self.snakeMaxSize):
+        for i in range(1, self.snakeMaxSize):
             self.snake.append((None, None))
 
     # Plus 1 to the direction
@@ -138,6 +147,6 @@ class Snake:
     def __str__(self):
         head = self.snake[self.headIdx]
         tail = self.snake[self.tailIdx]
-        result = "Snake Length: " + str(len(self.snake)) + " | Head Pos: [" + head[0] + ", " + head[1] + \
-                 "] | Tail Pos: [" + tail[0] + ", " + tail[1] + "]"
+        result = "Snake Length: " + str(len(self.snake)) + " | Head Pos: [" + str(head[0]) + ", " + str(head[1]) + \
+                 "] | Tail Pos: [" + str(tail[0]) + ", " + str(tail[1]) + "]"
         return result
