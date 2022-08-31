@@ -21,8 +21,7 @@ class Block:
         self.rect = pygame.Rect(pos, (self.grid_width * self.size_ratio, self.grid_height * self.size_ratio))
 
     def updatePos(self, x, y):
-        if self.rect is None:
-            self.__create_rect()
+        self.__checkExistence()
 
         self.x += x
         self.y += y
@@ -30,13 +29,18 @@ class Block:
         self.rect.update(pos, self.width * self.size_ratio, self.height * self.size_ratio)
 
     def getShape(self):
-        if self.rect is None:
-            self.__create_rect()
+        self.__checkExistence()
 
         return self.rect
 
     def getColor(self):
+        self.__checkExistence()
+
         return self.color
+
+    def __checkExistence(self):
+        if self.rect is None:
+            self.__create_rect()
 
     def __calculate_pos(self):
         grid_size = self.play_area_width / self.num_of_grids
