@@ -1,8 +1,7 @@
-import sys
-
 import Snake
 import pygame
 import random
+from Direction import Direction
 
 
 class Game:
@@ -63,16 +62,16 @@ class Game:
 
         while cont:
             if key == pygame.K_w:
-                direction = Snake.Direction.UP
+                direction = Direction.UP
                 cont = False
             elif key == pygame.K_s:
-                direction = Snake.Direction.DOWN
+                direction = Direction.DOWN
                 cont = False
             elif key == pygame.K_a:
-                direction = Snake.Direction.LEFT
+                direction = Direction.LEFT
                 cont = False
             elif key == pygame.K_d:
-                direction = Snake.Direction.RIGHT
+                direction = Direction.RIGHT
                 cont = False
 
         self.snake.changeDirection(direction)

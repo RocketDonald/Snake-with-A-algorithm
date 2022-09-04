@@ -1,10 +1,10 @@
 import os
 import queue
-import time
 
 import pygame
 import Block
 import Game
+import Snake
 
 pygame.font.init()
 
@@ -91,6 +91,8 @@ def main(window):
     end_game_wait_time = 10
     wait_time = 0
 
+    attempt = 1
+
     while run:
         # Handle time
         currentTime += clock.get_rawtime() / 1000   # Convert raw time from millisecond to second
@@ -126,8 +128,11 @@ def main(window):
             # Check if the game ends
             if end_game:
                 # Ends the game and restarts
-                gg_msg = "GG! Score " + str(gameHandler.getScore())
-                print(gg_msg)
+                if wait_time == 0:
+                    gg_msg = "GG! Score " + str(gameHandler.getScore())
+                    print("Attempt " + str(attempt) + ": " + gg_msg)
+                    attempt += 1
+
                 draw_text_middle(gg_msg, 50, black, window)
                 pygame.display.update()
                 # Show the GG message for wait_time, then restart the game

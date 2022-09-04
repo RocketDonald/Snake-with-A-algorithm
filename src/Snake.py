@@ -1,13 +1,18 @@
-from enum import Enum
+from Direction import Direction
+import numpy
 
 
-class Direction(Enum):
-    UP = 1
-    RIGHT = 2
-    DOWN = 3
-    LEFT = 4
+def singleton(class_):
+    instances = {}
+
+    def getinstance(*args, **kwargs):
+        if class_ not in instances:
+            instances[class_] = class_(*args, **kwargs)
+        return instances[class_]
+    return getinstance
 
 
+@singleton
 class Snake:
     # Stores position of head and body
     # Snake can move within 30*30 grid
@@ -22,7 +27,8 @@ class Snake:
     #       eat food (+1 length)
     #       get win (tailIdx == headIdx + 1)
 
-    snake = []
+    snake = []      # This will be a cyclic list, so that obtaining body, adding head and removing tail will be O(1)
+    snake_2d = [[]]
     head = ()
     headIdx = 0
     tailIdx = 0
@@ -40,6 +46,7 @@ class Snake:
 
     def reset(self):
         self.snake = []
+        self.snake_2d = [[]]
         self.headIdx = 0
         self.tailIdx = 0
         middle = self.boardSize / 2
@@ -50,6 +57,9 @@ class Snake:
         # Instantiate a list with the size of snakeMaxSize
         for i in range(1, self.snakeMaxSize):
             self.snake.append((None, None))
+
+        # Instantiate a 2d list with the size of snakeMaxSize * snakeMaxSize
+        self.snake_2d = [[0] * self.snakeMaxSize for i in range(self.snakeMaxSize)]
 
     # Plus 1 to the direction
     # A default moving action will add a new head and remove the tail, such that the length of the snake remains
@@ -86,16 +96,25 @@ class Snake:
 
     # This function updates the head position and add head into the list
     def __addHead(self, x, y):
+        # Handle cyclic list
         h = (x, y)
         self.head = h
         self.headIdx = (self.headIdx + 1) % self.snakeMaxSize
         self.snake[self.headIdx] = h
 
+        # Handle 2d list
+        self.snake_2d[int(x)][int(y)] = 1
+
     # This function removes the tail and replace it as (None, None) tuple
     # Then plus one to the tail index
     def __removeTail(self):
+        x, y = self.snake[self.tailIdx]
+        # Handle cyclic list
         self.snake[self.tailIdx] = (None, None)
         self.tailIdx = (self.tailIdx + 1) % self.snakeMaxSize
+
+        # Handle 2d list
+        self.snake_2d[int(x)][int(y)] = 0
 
     # This method changes the direction of the snake as long as the change is valid
     # Snake cannot change direction 180 Degree
@@ -138,6 +157,13 @@ class Snake:
         else:
             return []
 
+    def getWholeSnake(self):
+        result = [self.getHead(), self.getBody()]
+        return result
+
+    def getWholeSnake_2d(self):
+        return self.snake_2d
+
     def __cyclicIdx(self, i):
         return (i+1) % self.snakeMaxSize
 
@@ -150,3 +176,6 @@ class Snake:
         result = "Snake Length: " + str(len(self.snake)) + " | Head Pos: [" + str(head[0]) + ", " + str(head[1]) + \
                  "] | Tail Pos: [" + str(tail[0]) + ", " + str(tail[1]) + "]"
         return result
+
+    def __iter__(self):
+        return self.getWholeSnake()
