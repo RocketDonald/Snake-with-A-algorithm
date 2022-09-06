@@ -44,6 +44,8 @@ Methods:
         -   addFrontier(frontier, direction)    --> add valid paths into the frontier
 """
 import heapq
+import queue
+import threading
 
 import GameUI
 from AI_Agents.Node import Node
@@ -53,6 +55,7 @@ from Direction import Direction
 class AStar:
     def __init__(self):
         self.frontier = []  # This frontier will be a heap queue
+        self.result = queue.Queue()
         self.borderSize = GameUI.getNumOfGrids()
 
     # This function find the path and returns it
@@ -61,59 +64,82 @@ class AStar:
     def find_path(self, beginning_pos, goal_pos, direction: Direction, snake_whole_body, snake_length):
         print(f'Finding a path from {beginning_pos[0]} , {beginning_pos[1]} to {goal_pos[0]}, {goal_pos[1]}')
         # Reset
-        self.frontier = []
+        self.frontier = queue.PriorityQueue()
 
         # Create a node for beginning pos
         # This the direction of the first movement cannot be changed
         dis = self.__manhattan_distance(beginning_pos, goal_pos)
         beginning_node = Node(dis, [beginning_pos], [direction])
-        self.frontier.append(beginning_node)
+        self.frontier.put(beginning_node)
 
         # Loop until the frontier is empty
-        while len(self.frontier) != 0:
-            # Select a path
-            path_node = heapq.heappop(self.frontier)
-            path = path_node.path
-            head_pos = path[len(path) - 1]
-            print(f"Path with f-value {path_node.f_value} has been selected")
+        while not self.frontier.empty():
+            thread1 = threading.Thread(target=self.a_star_logic, args= (snake_whole_body, snake_length, goal_pos, direction))
+            thread2 = threading.Thread(target=self.a_star_logic, args= (snake_whole_body, snake_length, goal_pos, direction))
+            thread3 = threading.Thread(target=self.a_star_logic, args= (snake_whole_body, snake_length, goal_pos, direction))
+            thread4 = threading.Thread(target=self.a_star_logic, args= (snake_whole_body, snake_length, goal_pos, direction))
 
-            # Prune if the path length is too long (i.e., over the size of the board)
-            if self.__path_too_long(path):
-                # print("Pruned because of too long")
-                continue
+            thread1.start()
+            thread2.start()
+            thread3.start()
+            thread4.start()
 
-            # Check is the path valid (i.e., does not collide with anything)
-            # Prune this path if invalid
-            if self.__isCollide(head_pos, snake_whole_body, path, snake_length):
-                continue
+            thread1.join()
+            thread2.join()
+            thread3.join()
+            thread4.join()
 
-            # Return the solution path if it meets the goal
-            if self.__isGoal(head_pos, goal_pos):
-                return path_node.directions[1:]
-
-            # Add neighbour nodes to the frontier
-            # Add every direction except the opposite direction
-            dir_list = self.__prune_direction(direction, head_pos)
-
-            for d in dir_list:
-                # Generate a new path and create a node with the new path
-                path_new = path.copy()
-                head_new = self.__new_head(head_pos, d)
-                path_new.append(head_new)
-
-                directions_new = path_node.directions.copy()
-                directions_new.append(d)
-                # The cost = length of path
-                node_new = Node(self.__f_value(head_new, goal_pos, len(path_new)), path_new, directions_new)
-
-                # Add the new node to frontier
-                heapq.heappush(self.frontier, node_new)
+            if not self.result.empty():
+                return self.result.get()
 
         print("No solution found")
         return []
 
-    def a_star_logic(self):
-        pass
+    def a_star_logic(self, snake_whole_body, snake_length, goal_pos, direction):
+        # Select a path
+        path_node = self.frontier.get()
+
+        if not path_node or path_node is None:
+            return
+
+        path = path_node.path
+        head_pos = path[len(path) - 1]
+        # print(f"Path with f-value {path_node.f_value} has been selected")
+
+        # Prune if the path length is too long (i.e., over the size of the board)
+        if self.__path_too_long(path):
+            # print("Pruned because of too long")
+            return
+
+        # Check is the path valid (i.e., does not collide with anything)
+        # Prune this path if invalid
+        if self.__isCollide(head_pos, snake_whole_body, path, snake_length):
+            return
+
+        # Return the solution path if it meets the goal
+        if self.__isGoal(head_pos, goal_pos):
+            return self.result.put(path_node.directions[1:])
+
+        # Add neighbour nodes to the frontier
+        # Add every direction except the opposite direction
+        dir_list = self.__prune_direction(direction, head_pos)
+
+        for d in dir_list:
+            # Generate a new path and create a node with the new path
+            path_new = path.copy()
+            head_new = self.__new_head(head_pos, d)
+            path_new.append(head_new)
+
+            directions_new = path_node.directions.copy()
+            directions_new.append(d)
+            # The cost = length of path
+            node_new = Node(self.__f_value(head_new, goal_pos, len(path_new)), path_new, directions_new)
+
+            # Add the new node to frontier
+            self.frontier.put(node_new)
+
+        return
+
 
     def __path_too_long(self, path):
         path_limit = self.borderSize * self.borderSize
@@ -167,13 +193,13 @@ class AStar:
         x, y = head_pos
         limit = self.borderSize - 1
 
-        if direction == Direction.UP or y == limit:
+        if direction == Direction.UP or y >= limit:
             dir_list.remove(Direction.DOWN)
-        if direction == Direction.DOWN or y == 0:
+        if direction == Direction.DOWN or y <= 0:
             dir_list.remove(Direction.UP)
-        if direction == Direction.RIGHT or x == limit:
+        if direction == Direction.RIGHT or x >= limit:
             dir_list.remove(Direction.LEFT)
-        if direction == Direction.LEFT or x == 0:
+        if direction == Direction.LEFT or x <= 0:
             dir_list.remove(Direction.RIGHT)
 
         return dir_list
