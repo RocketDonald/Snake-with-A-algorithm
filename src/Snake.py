@@ -1,5 +1,4 @@
 from Direction import Direction
-import numpy
 
 
 def singleton(class_):
@@ -32,6 +31,7 @@ class Snake:
     head = ()
     headIdx = 0
     tailIdx = 0
+    length = 0
     snakeMaxSize = 30 * 30
     boardSize = 30
     direction = Direction.LEFT
@@ -49,9 +49,10 @@ class Snake:
         self.snake_2d = [[]]
         self.headIdx = 0
         self.tailIdx = 0
+        self.length = 1
         middle = self.boardSize / 2
-        head = (middle, middle)
-        self.snake.append(head)  # Set the snake starts in the middle
+        self.head = (middle, middle)
+        self.snake.append(self.head)  # Set the snake starts in the middle
         self.direction = Direction.LEFT
 
         # Instantiate a list with the size of snakeMaxSize
@@ -90,8 +91,7 @@ class Snake:
             self.__removeTail()
             ate = False
 
-        # print("Head: " + str(self.headIdx) + " | Tail: " + str(self.tailIdx))   # TODO - remove this
-
+        print(f"Moved from {currentPos[0]}, {currentPos[1]} to {x}, {y}")
         return ate
 
     # This function updates the head position and add head into the list
@@ -104,6 +104,9 @@ class Snake:
 
         # Handle 2d list
         self.snake_2d[int(x)][int(y)] = 1
+
+        # Increase the length
+        self.length += 1
 
     # This function removes the tail and replace it as (None, None) tuple
     # Then plus one to the tail index
@@ -147,8 +150,8 @@ class Snake:
 
         # Case 1: beginning < ending
         if beginning < ending:
-            res = self.snake[beginning + 1:]
-            res.append(self.snake[:ending - 1])
+            res = self.snake[ending:]
+            res.extend(self.snake[:beginning])
             return res
         # Case 2: beginning > ending
         elif beginning > ending:
@@ -158,11 +161,19 @@ class Snake:
             return []
 
     def getWholeSnake(self):
-        result = [self.getHead(), self.getBody()]
+        result = []
+        result.extend(self.getBody())
+        result.append(self.getHead())
         return result
 
     def getWholeSnake_2d(self):
         return self.snake_2d
+
+    def get_snake_length(self):
+        return self.length
+
+    def getDirection(self):
+        return self.direction
 
     def __cyclicIdx(self, i):
         return (i+1) % self.snakeMaxSize

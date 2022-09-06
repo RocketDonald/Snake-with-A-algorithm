@@ -4,7 +4,6 @@ import queue
 import pygame
 import Block
 import Game
-import Snake
 
 pygame.font.init()
 
@@ -12,7 +11,7 @@ size = width, height = 780, 780
 playAreaSize = playAreaWidth, playAreaHeight = 660, 660
 playAreaX = (width - playAreaWidth) / 2
 playAreaY = (height - playAreaHeight) / 2 + 40
-numOfGrids = 30
+numOfGrids = 20
 fps = 4
 timePerFrame = 1 / fps
 foodSizeRatio = 0.8

@@ -1,7 +1,10 @@
 import Snake
 import pygame
 import random
+import queue
+
 from Direction import Direction
+from AI_Agents.AStar import AStar
 
 
 class Game:
@@ -29,8 +32,15 @@ class Game:
         self.size = size
         self.snake = Snake.Snake(self.size)
 
+        # Instantiate AI Agent and a list of solution path
+        self.__ai = AStar()
+        self.path = []
+
+        self.event_queue = queue.Queue()
+
     def start(self):
         self.__generateFood()
+        self.__call_AI(self.__ai, True)
 
     # Reset all the variables and restart the game
     def restart(self):
@@ -51,32 +61,46 @@ class Game:
     def keyHandler(self, event):
         if not self.__isFoodExist():
             self.__generateFood()
+            self.__call_AI(self.__ai, True)
 
         # Change Direction
-        self.__changeDir(event)
+        for e in event:
+            self.event_queue.put(e)
 
-    def __changeDir(self, keyQueue):
+    # This function changes the direction that the snake goes,
+    # calls this function before moving the snake
+    def __changeDir(self):
+        # Do nothing if the event queue is empty
+        if self.event_queue.empty():
+            return
+
         direction = None
-        key = keyQueue.get()
+        event = self.event_queue.get()
         cont = True
 
+        # Continue iterating the queue until a valid event is met
         while cont:
-            if key == pygame.K_w:
+            if event == pygame.K_w or event == Direction.UP:
                 direction = Direction.UP
                 cont = False
-            elif key == pygame.K_s:
+            elif event == pygame.K_s or event == Direction.DOWN:
                 direction = Direction.DOWN
                 cont = False
-            elif key == pygame.K_a:
+            elif event == pygame.K_a or event == Direction.LEFT:
                 direction = Direction.LEFT
                 cont = False
-            elif key == pygame.K_d:
+            elif event == pygame.K_d or event == Direction.RIGHT:
                 direction = Direction.RIGHT
                 cont = False
 
         self.snake.changeDirection(direction)
+        print("Changed Direction " + str(direction))
 
     def move(self):
+        # Change the direction of the snake before moving
+        self.__changeDir()
+
+        # Move the snake and check if it ate the food
         foodAte = self.snake.move(self.getFoodPos())
 
         # Check if the snake collide with its body or the wall after moving
@@ -86,6 +110,7 @@ class Game:
 
         if foodAte:
             self.__generateFood()
+            self.__call_AI(self.__ai, True)
             self.score += self.scoreIncrement
             if self.score > self.max_score:
                 self.max_score = self.score
@@ -96,7 +121,10 @@ class Game:
     def isEndGame(self):
         return self.end_game
 
+    # This function generate food
+    # Should call AI after a new food is generated
     def __generateFood(self):
+        print("Generating food")
         Collide = True
         rdm = (None, None)
         while Collide:
@@ -104,6 +132,14 @@ class Game:
             Collide = self.isCollide(rdm, True)
 
         self.foodPos = rdm
+
+    # This function receive an AI agent and runs it
+    # It adds the solution path to the event queue
+    def __call_AI(self, ai, run: bool):
+        if run is True:
+            for node in ai.find_path(self.snake.getHead(), self.foodPos, self.snake.getDirection(),
+                                      self.snake.getWholeSnake_2d(), self.snake.get_snake_length()):
+                self.event_queue.put(node)
 
     # This function checks if a position is collide with the snake
     def isCollide(self, pos, checkHead):
